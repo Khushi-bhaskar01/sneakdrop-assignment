@@ -138,7 +138,7 @@ export async function handlePaymentEvent(input: PaymentEventInput) {
       [input.holdId, input.providerEventId],
     );
 
-    if (purchaseCheck.rowCount > 0) {
+    if (purchaseCheck.rowCount && purchaseCheck.rowCount > 0) {
       await client.query(
         `
           INSERT INTO payment_events (provider_event_id, user_id, hold_id, event_type, payload, status)

@@ -235,3 +235,41 @@ export async function requestHoldForUser(userId: string, pairId: number) {
 export async function createActiveHold(userId: string, pairId: number) {
   return requestHoldForUser(userId, pairId);
 }
+
+export async function getUserStatus(userId: string) {
+  const purchasesCount = await countUserPurchases(userId);
+
+  const activeHold = await dbPool.query(
+    "SELECT id, sneaker_pair_id, status, expires_at FROM holds WHERE user_id = $1 AND status = 'ACTIVE' LIMIT 1",
+    [userId]
+  );
+
+  let hold = null;
+  if ((activeHold.rowCount ?? 0) > 0) {
+    hold = activeHold.rows[0];
+  }
+
+  const queueEntry = await dbPool.query(
+    "SELECT id, sneaker_pair_id, requested_at FROM queue_entries WHERE user_id = $1 AND status = 'QUEUED' LIMIT 1",
+    [userId]
+  );
+
+  let queue = null;
+  if ((queueEntry.rowCount ?? 0) > 0) {
+    const q = queueEntry.rows[0];
+    const positionQuery = await dbPool.query(
+      "SELECT COUNT(*)::int AS pos FROM queue_entries WHERE sneaker_pair_id = $1 AND status = 'QUEUED' AND requested_at <= $2",
+      [q.sneaker_pair_id, q.requested_at]
+    );
+    queue = {
+      ...q,
+      position: Number(positionQuery.rows[0].pos)
+    };
+  }
+
+  return {
+    purchasesCount,
+    activeHold: hold,
+    queueEntry: queue
+  };
+}

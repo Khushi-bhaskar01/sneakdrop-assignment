@@ -1,13 +1,15 @@
 import express, { type Request, type Response } from 'express';
+import cors from 'cors';
 import { env } from './config/env.js';
 import { dbPool } from './db/pool.js';
 import { createUser, getUserById } from './services/usersService.js';
-import { countUserActiveHolds, countUserPurchases, createActiveHold, listPairs, reconcilePair } from './services/inventoryService.js';
+import { countUserActiveHolds, countUserPurchases, createActiveHold, listPairs, reconcilePair, getUserStatus } from './services/inventoryService.js';
 import { handlePaymentEvent } from './services/paymentService.js';
 
 export function createApp() {
   const app = express();
 
+  app.use(cors());
   app.use(express.json());
 
   app.get('/health', async (_req: Request, res: Response) => {
@@ -44,6 +46,15 @@ export function createApp() {
       res.status(201).json({ user });
     } catch (error) {
       res.status(400).json({ error: error instanceof Error ? error.message : 'Invalid user request' });
+    }
+  });
+
+  app.get('/users/:userId/status', async (req: Request, res: Response) => {
+    try {
+      const status = await getUserStatus(req.params.userId as string);
+      res.json(status);
+    } catch (error) {
+      res.status(400).json({ error: error instanceof Error ? error.message : 'Could not get status' });
     }
   });
 

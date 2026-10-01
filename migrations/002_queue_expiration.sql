@@ -4,9 +4,12 @@ CREATE TABLE IF NOT EXISTS queue_entries (
   sneaker_pair_id INTEGER NOT NULL REFERENCES sneaker_pairs(id) ON DELETE CASCADE,
   status TEXT NOT NULL CHECK (status IN ('QUEUED', 'PROMOTED', 'CANCELLED')) DEFAULT 'QUEUED',
   requested_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
-  created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
-  UNIQUE (user_id, sneaker_pair_id)
+  created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
 );
+
+CREATE UNIQUE INDEX IF NOT EXISTS unique_active_queue_per_user
+ON queue_entries (user_id)
+WHERE status = 'QUEUED';
 
 CREATE INDEX IF NOT EXISTS queue_entries_pair_requested_idx
 ON queue_entries (sneaker_pair_id, requested_at);

@@ -28,8 +28,7 @@ CREATE TABLE IF NOT EXISTS holds (
   sneaker_pair_id INTEGER NOT NULL REFERENCES sneaker_pairs(id) ON DELETE CASCADE,
   status TEXT NOT NULL CHECK (status IN ('ACTIVE', 'EXPIRED', 'PURCHASED', 'RELEASED')),
   expires_at TIMESTAMPTZ NOT NULL,
-  created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
-  UNIQUE (user_id, sneaker_pair_id)
+  created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
 );
 
 CREATE UNIQUE INDEX IF NOT EXISTS unique_active_hold_per_user
